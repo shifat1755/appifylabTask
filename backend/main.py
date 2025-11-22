@@ -1,8 +1,6 @@
 from fastapi import FastAPI
+from presentation.routes.auth_routes import authRouter
 
 app = FastAPI(debug=True)
 
-
-@app.get("/")
-async def read_root():
-    return {"Hello": "World"}
+app.include_router(authRouter, prefix="/api", tags=["Auth"])

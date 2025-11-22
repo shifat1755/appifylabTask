@@ -1,6 +1,5 @@
+from config import JWTConfig, RedisConfig
 from redis.asyncio import Redis
-
-from backend.config import JWTConfig, RedisConfig
 
 
 class RedisTokenService:
