@@ -1,0 +1,131 @@
+import logging
+
+from application.usecases.auth_usecase import AuthUsecase
+from domain.errors import EmailAlreadyExistsError, UserNotFoundError, WrongCredentials
+from fastapi import APIRouter, Cookie, Depends, HTTPException, Response
+from infrastructure.data.database import get_db
+from presentation.routes.dependencies import get_current_user
+from presentation.schemas.user_schema import (
+    UserCreate,
+    UserCredentials,
+    UserRead,
+    loginresponse,
+)
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import Session
+
+authRouter = APIRouter(prefix="/auth")
+
+logger = logging.getLogger(__name__)
+
+
+@authRouter.post("/signup", response_model=UserRead)
+async def create_user(user_create: UserCreate, db: Session = Depends(get_db)):
+    usecase = AuthUsecase(db)
+    try:
+        user = await usecase.create_user(user_create)
+    except EmailAlreadyExistsError:
+        raise HTTPException(status_code=400, detail="Email already exists")
+    except Exception:
+        logger.exception("Error creating user")
+        raise HTTPException(status_code=500, detail="Internal server error")
+    return UserRead.model_validate(user)
+
+
+@authRouter.post("/login", response_model=loginresponse)
+async def login_user(
+    credential: UserCredentials, response: Response, db: AsyncSession = Depends(get_db)
+):
+    usecase = AuthUsecase(db=db)
+    try:
+        login_data = await usecase.login(user_cred=credential)
+
+        # Set refresh token in HttpOnly cookie
+        response.set_cookie(
+            key="refresh_token",
+            value=login_data.refresh_token,
+            httponly=True,
+            secure=True,
+            samesite="Strict",
+            path="/api/auth/refresh",
+        )
+        # Set session_id in HttpOnly cookie
+        response.set_cookie(
+            key="session_id",
+            value=login_data.session_id,
+            httponly=True,
+            secure=True,
+            samesite="Strict",
+            path="/api/",
+        )
+
+        # Return access token, session_id, user info in JSON
+        return {
+            "access_token": login_data.access_token,
+            "user": login_data.user,
+        }
+    except WrongCredentials:
+        raise HTTPException(status_code=401, detail="Credentials mismatch")
+    except UserNotFoundError:
+        raise HTTPException(status_code=404, detail="User not found")
+    except Exception:
+        logger.exception("Error during login")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@authRouter.post("/logout")
+async def logout_user(
+    session_id: str = Cookie(None),
+    sender=Depends(get_current_user),
+):
+    if not session_id:
+        raise HTTPException(status_code=401, detail="No session_id cookie found")
+
+    usecase = AuthUsecase(None)
+    print("sender__", sender)
+    try:
+        await usecase.logout(sender["user_id"], session_id)
+    except Exception:
+        logger.exception("Error during logout")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+    return {"detail": "Logged out successfully"}
+
+
+@authRouter.post("/refresh")
+async def refresh(
+    response: Response,
+    refresh_token: str = Cookie(default=None),
+    session_id: str = Cookie(default=None),
+):
+    if not session_id:
+        raise HTTPException(status_code=401, detail="No session_id provided")
+    if not refresh_token:
+        raise HTTPException(status_code=401, detail="No refresh token provided")
+
+    usecase = AuthUsecase(None)
+    # verify and decode token
+    new_access, new_refresh = await usecase.get_fresh_tokens(
+        session_id=session_id, refresh_token=refresh_token
+    )
+
+    # Set refresh token in HttpOnly cookie
+    response.set_cookie(
+        key="refresh_token",
+        value=new_refresh,
+        httponly=True,
+        secure=True,
+        samesite="Strict",
+        path="/api/auth/refresh",
+    )
+    # Set session_id in HttpOnly cookie
+    response.set_cookie(
+        key="session_id",
+        value=session_id,
+        httponly=True,
+        secure=True,
+        samesite="Strict",
+        path="/api/",
+    )
+
+    return {"access_token": new_access}
