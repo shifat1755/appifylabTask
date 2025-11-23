@@ -12,7 +12,6 @@ from presentation.schemas.user_schema import (
     loginresponse,
 )
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import Session
 
 authRouter = APIRouter(prefix="/auth")
 
@@ -20,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 @authRouter.post("/signup", response_model=UserRead)
-async def create_user(user_create: UserCreate, db: Session = Depends(get_db)):
+async def create_user(user_create: UserCreate, db: AsyncSession = Depends(get_db)):
     usecase = AuthUsecase(db)
     try:
         user = await usecase.create_user(user_create)

@@ -15,11 +15,11 @@ from presentation.schemas.user_schema import (
     UserCreate,
     UserCredentials,
 )
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class AuthUsecase:
-    def __init__(self, db: Session):
+    def __init__(self, db: AsyncSession):
         self.userRepo = UserRepository(db)
         self.redis_token_service = RedisTokenService()
         self.jwt_handler = JWTHandler()

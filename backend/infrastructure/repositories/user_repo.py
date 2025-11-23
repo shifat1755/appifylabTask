@@ -1,13 +1,14 @@
 from typing import Optional
 
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from infrastructure.data.models.user_model import User
 from presentation.schemas.user_schema import UserCreate
-from sqlalchemy import select
-from sqlalchemy.orm import Session
 
 
 class UserRepository:
-    def __init__(self, db: Session):
+    def __init__(self, db: AsyncSession):
         self.db = db
 
     # Create user
@@ -28,7 +29,7 @@ class UserRepository:
             await self.db.refresh(db_user)
             return db_user
         except Exception as e:
-            self.db.rollback()
+            await self.db.rollback()
             raise e
 
     async def get_user_by_id(self, user_id: int) -> Optional[User]:
