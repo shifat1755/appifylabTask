@@ -50,3 +50,4 @@ dist/
 # Docker-related files
 docker-compose.override.yml
 *.dockerignore
+Task_Full_Stack_Engineer
