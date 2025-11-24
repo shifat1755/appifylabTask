@@ -1,5 +1,5 @@
+from typing import List as ListType
 from typing import Optional
-from typing import list as ListType
 
 from infrastructure.data.models.like_model import Like, LikeTargetType
 from sqlalchemy import and_, func, select
