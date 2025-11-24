@@ -42,6 +42,7 @@ async def get_post_likes(
     skip: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=100),
     db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
 ):
     """Get all users who liked a post."""
     usecase = LikeUsecase(db)
@@ -88,6 +89,7 @@ async def get_comment_likes(
     skip: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=100),
     db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
 ):
     """Get all users who liked a comment."""
     usecase = LikeUsecase(db)
