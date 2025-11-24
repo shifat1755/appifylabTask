@@ -2,7 +2,7 @@ from datetime import datetime
 
 from infrastructure.data.database import Base
 from sqlalchemy import Boolean, DateTime, String, Text
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
 
@@ -37,3 +37,8 @@ class User(Base):
     last_login: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
+
+    # Relationships
+    posts: Mapped[list["Post"]] = relationship("Post", back_populates="author")  # noqa: F821
+    comments: Mapped[list["Comment"]] = relationship("Comment", back_populates="author")  # noqa: F821
+    likes: Mapped[list["Like"]] = relationship("Like", back_populates="user")  # noqa: F821
