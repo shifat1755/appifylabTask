@@ -7,6 +7,7 @@ import {
 import Login from "./pages/Login";
 import Registration from "./pages/Registration";
 import Home from "./pages/home";
+import Feed from "./pages/Feed";
 
 function App() {
   return (
@@ -15,7 +16,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Registration />} />
         <Route path="/" element={<Navigate to="/login" replace />} />
-        <Route path="/home" element={<Home />} />
+        <Route path="/feed" element={<Feed />} />
       </Routes>
     </Router>
   );
