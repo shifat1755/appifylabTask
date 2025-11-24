@@ -5,6 +5,11 @@ function Header() {
   const [showNotifyDropdown, setShowNotifyDropdown] = useState(false);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
 
+  function handlelogout() {
+    localStorage.removeItem("authToken");
+    window.location.href = "/login";
+  }
+
   return (
     <nav className="navbar navbar-expand-lg navbar-light _header_nav _padd_t10">
       <div className="container _custom_container">
@@ -130,10 +135,14 @@ function Header() {
                 <span className="_counting">6</span>
                 <div
                   id="_notify_drop"
-                  className={`_notification_dropdown ${showNotifyDropdown ? "show" : ""}`}
+                  className={`_notification_dropdown ${
+                    showNotifyDropdown ? "show" : ""
+                  }`}
                 >
                   <div className="_notifications_content">
-                    <h4 className="_notifications_content_title">Notifications</h4>
+                    <h4 className="_notifications_content_title">
+                      Notifications
+                    </h4>
                     <div className="_notification_box_right">
                       <button
                         type="button"
@@ -175,7 +184,9 @@ function Header() {
                   <div className="_notifications_drop_box">
                     <div className="_notifications_drop_btn_grp">
                       <button className="_notifications_btn_link">All</button>
-                      <button className="_notifications_btn_link1">Unread</button>
+                      <button className="_notifications_btn_link1">
+                        Unread
+                      </button>
                     </div>
                     <div className="_notifications_all">
                       {/* Notification items would go here */}
@@ -260,7 +271,9 @@ function Header() {
             {/* dropdown */}
             <div
               id="_prfoile_drop"
-              className={`_nav_profile_dropdown _profile_dropdown ${showProfileDropdown ? "show" : ""}`}
+              className={`_nav_profile_dropdown _profile_dropdown ${
+                showProfileDropdown ? "show" : ""
+              }`}
             >
               <div className="_nav_profile_dropdown_info">
                 <div className="_nav_profile_dropdown_image">
@@ -361,7 +374,7 @@ function Header() {
                     </button>
                   </a>
                 </li>
-                <li className="_nav_dropdown_list_item">
+                <li className="_nav_dropdown_list_item" onClick={handlelogout}>
                   <a href="#0" className="_nav_dropdown_link">
                     <div className="_nav_drop_info">
                       <span>
@@ -410,4 +423,3 @@ function Header() {
 }
 
 export default Header;
-

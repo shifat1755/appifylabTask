@@ -16,8 +16,3 @@ export async function register(data: any) {
     const response = await api.post("/auth/signup", data);
     return response.data;
 }
-export async function logout() {
-    const response = await api.post("/auth/logout");
-    localStorage.removeItem("authToken");//later in feed page we will do it in proper way
-    return response.data;
-}
