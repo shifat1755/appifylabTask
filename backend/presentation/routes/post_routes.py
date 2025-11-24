@@ -3,18 +3,18 @@ from typing import Optional
 
 from application.usecases.post_usecase import PostUsecase
 from domain.errors import (
+    PostAccessDeniedError,
     PostNotFoundError,
     UnauthorizedError,
-    PostAccessDeniedError,
 )
 from fastapi import APIRouter, Depends, HTTPException, Query
 from infrastructure.data.database import get_db
 from presentation.routes.dependencies import get_current_user, get_current_user_optional
 from presentation.schemas.post_schema import (
     PostCreate,
+    PostList,
     PostRead,
     PostUpdate,
-    PostList,
 )
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -37,7 +37,7 @@ async def create_post(
         return PostRead.model_validate(post)
     except UnauthorizedError:
         raise HTTPException(status_code=401, detail="Unauthorized")
-    except Exception as e:
+    except Exception:
         logger.exception("Error creating post")
         raise HTTPException(status_code=500, detail="Internal server error")
 
@@ -55,9 +55,7 @@ async def get_posts(
     """Get all posts with pagination and filters."""
     usecase = PostUsecase(db)
     try:
-        current_user_id = (
-            int(current_user["user_id"]) if current_user else None
-        )
+        current_user_id = int(current_user["user_id"]) if current_user else None
         posts, total = await usecase.get_posts(
             skip=skip,
             limit=limit,
@@ -72,7 +70,7 @@ async def get_posts(
             skip=skip,
             limit=limit,
         )
-    except Exception as e:
+    except Exception:
         logger.exception("Error fetching posts")
         raise HTTPException(status_code=500, detail="Internal server error")
 
@@ -86,18 +84,14 @@ async def get_post(
     """Get a single post by ID."""
     usecase = PostUsecase(db)
     try:
-        current_user_id = (
-            int(current_user["user_id"]) if current_user else None
-        )
+        current_user_id = int(current_user["user_id"]) if current_user else None
         post = await usecase.get_post(post_id, current_user_id=current_user_id)
         return PostRead.model_validate(post)
     except PostNotFoundError:
         raise HTTPException(status_code=404, detail="Post not found")
     except PostAccessDeniedError:
-        raise HTTPException(
-            status_code=403, detail="Access denied to private post"
-        )
-    except Exception as e:
+        raise HTTPException(status_code=403, detail="Access denied to private post")
+    except Exception:
         logger.exception("Error fetching post")
         raise HTTPException(status_code=500, detail="Internal server error")
 
@@ -121,7 +115,7 @@ async def update_post(
         raise HTTPException(
             status_code=403, detail="Only the author can update this post"
         )
-    except Exception as e:
+    except Exception:
         logger.exception("Error updating post")
         raise HTTPException(status_code=500, detail="Internal server error")
 
@@ -146,7 +140,6 @@ async def delete_post(
         raise HTTPException(
             status_code=403, detail="Only the author can delete this post"
         )
-    except Exception as e:
+    except Exception:
         logger.exception("Error deleting post")
         raise HTTPException(status_code=500, detail="Internal server error")
-
