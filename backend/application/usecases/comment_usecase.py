@@ -1,5 +1,3 @@
-from typing import Optional
-
 from domain.errors import (
     CommentNotFoundError,
     PostNotFoundError,
@@ -24,6 +22,8 @@ class CommentUsecase:
         author_id: int,
         comment_data: CommentCreate,
     ) -> Comment:
+        print("inside_comment_usecase")
+
         # Verify post exists
         post = await self.post_repo.get_post_by_id(post_id, include_author=False)
         if not post:
@@ -31,17 +31,20 @@ class CommentUsecase:
 
         # Check if parent comment exists (if provided)
         if comment_data.parent_comment_id:
+            print("inside_comment_usecase_parent_check")
             parent = await self.comment_repo.get_comment_by_id(
                 comment_data.parent_comment_id, include_author=False
             )
             if not parent:
                 raise CommentNotFoundError
-
+        print("inside_comment_usecase")
         comment = await self.comment_repo.create_comment(
             post_id=post_id,
             author_id=author_id,
             content=comment_data.content,
-            parent_comment_id=comment_data.parent_comment_id,
+            parent_comment_id=comment_data.parent_comment_id
+            if comment_data.parent_comment_id
+            else None,
         )
 
         # Increment post comments count
@@ -148,4 +151,3 @@ class CommentUsecase:
         await self.post_repo.decrement_comments_count(comment.post_id)
 
         return await self.comment_repo.delete_comment(comment_id)
-
