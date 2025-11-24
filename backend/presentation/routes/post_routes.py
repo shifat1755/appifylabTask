@@ -47,7 +47,7 @@ async def get_posts(
     skip: int = Query(0, ge=0),
     limit: int = Query(20, ge=1, le=100),
     author_id: Optional[int] = Query(None),
-    visibility: Optional[str] = Query(None),
+    visibility: Optional[str] = Query(None, regex="^(public|private)$"),
     sort_by: str = Query("newest", regex="^(newest|oldest|most_liked|most_commented)$"),
     db: AsyncSession = Depends(get_db),
     current_user: Optional[dict] = Depends(get_current_user_optional),
