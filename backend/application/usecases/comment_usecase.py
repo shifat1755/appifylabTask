@@ -1,5 +1,3 @@
-from typing import Optional
-
 from domain.errors import (
     CommentNotFoundError,
     PostNotFoundError,
@@ -41,7 +39,9 @@ class CommentUsecase:
             post_id=post_id,
             author_id=author_id,
             content=comment_data.content,
-            parent_comment_id=comment_data.parent_comment_id,
+            parent_comment_id=comment_data.parent_comment_id
+            if comment_data.parent_comment_id
+            else None,
         )
 
         # Increment post comments count
@@ -148,4 +148,3 @@ class CommentUsecase:
         await self.post_repo.decrement_comments_count(comment.post_id)
 
         return await self.comment_repo.delete_comment(comment_id)
-

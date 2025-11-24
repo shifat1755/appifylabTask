@@ -1,11 +1,10 @@
 from datetime import datetime, timezone
 from typing import Optional
 
+from infrastructure.data.models.comment_model import Comment
 from sqlalchemy import asc, desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
-
-from infrastructure.data.models.comment_model import Comment
 
 
 class CommentRepository:
@@ -19,6 +18,7 @@ class CommentRepository:
         content: str,
         parent_comment_id: Optional[int] = None,
     ) -> Comment:
+        print("inside_comment_repo")
         db_comment = Comment(
             post_id=post_id,
             author_id=author_id,
@@ -29,6 +29,13 @@ class CommentRepository:
             self.db.add(db_comment)
             await self.db.commit()
             await self.db.refresh(db_comment)
+            # eager load
+            res = await self.db.execute(
+                select(Comment)
+                .options(selectinload(Comment.author))
+                .where(Comment.id == db_comment.id)
+            )
+            db_comment = res.scalars().first()
             return db_comment
         except Exception as e:
             await self.db.rollback()

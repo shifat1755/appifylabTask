@@ -31,6 +31,7 @@ async def create_comment(
     usecase = CommentUsecase(db)
     try:
         user_id = int(current_user["user_id"])
+        print("Whats_wrong!")
         comment = await usecase.create_comment(
             post_id=post_id, author_id=user_id, comment_data=comment_data
         )
@@ -52,6 +53,7 @@ async def get_comments_by_post(
     sort_by: str = Query("newest", regex="^(newest|oldest|most_liked)$"),
     top_level_only: bool = Query(True),
     db: AsyncSession = Depends(get_db),
+    sender_id: int = Depends(get_current_user),
 ):
     """Get all comments for a post."""
     usecase = CommentUsecase(db)
@@ -83,6 +85,7 @@ async def get_replies_by_comment(
     limit: int = Query(50, ge=1, le=100),
     sort_by: str = Query("newest", regex="^(newest|oldest|most_liked)$"),
     db: AsyncSession = Depends(get_db),
+    sender_id: int = Depends(get_current_user),
 ):
     """Get all replies for a comment."""
     usecase = CommentUsecase(db)
@@ -103,7 +106,7 @@ async def get_replies_by_comment(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@commentRouter.put("/{comment_id}", response_model=CommentRead)
+@commentRouter.put("/comment/{comment_id}", response_model=CommentRead)
 async def update_comment(
     comment_id: int,
     comment_data: CommentUpdate,
@@ -127,7 +130,7 @@ async def update_comment(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@commentRouter.delete("/{comment_id}", status_code=204)
+@commentRouter.delete("/comment/{comment_id}", status_code=204)
 async def delete_comment(
     comment_id: int,
     db: AsyncSession = Depends(get_db),
