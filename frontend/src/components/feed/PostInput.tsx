@@ -1,12 +1,17 @@
 import { useState } from "react";
+import { createPost } from "../../service/postService";
 
 function PostInput() {
   const [postText, setPostText] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle post submission
-    console.log("Post submitted:", postText);
+    const data = {
+      content: postText,
+    };
+    createPost(data).then((response) => {
+      console.log("Post created successfully:", response);
+    });
     setPostText("");
   };
 
@@ -167,4 +172,3 @@ function PostInput() {
 }
 
 export default PostInput;
-

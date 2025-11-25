@@ -14,7 +14,8 @@ function Login() {
 
     login(email, password)
       .then((data) => {
-        localStorage.setItem("authToken", data.token);
+        localStorage.setItem("authToken", data.access_token);
+        console.log("login_data", data);
         navigate("/feed");
       })
       .catch((err: any) => {
