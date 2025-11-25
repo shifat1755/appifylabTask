@@ -1,8 +1,53 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import PostInput from "./PostInput";
 import TimelinePost from "./TimelinePost";
+import { getPosts } from "../../service/postService";
+
+interface Post {
+  id: number;
+  content: string;
+  image_url: string | null;
+  visibility: string;
+  likes_count: number;
+  comments_count: number;
+  created_at: string;
+  author?: {
+    id: number;
+    first_name: string;
+    last_name: string;
+    email: string;
+    avatar_url: string | null;
+  };
+}
 
 function MiddleFeed() {
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchPosts();
+  }, []);
+
+  const fetchPosts = async () => {
+    try {
+      setLoading(true);
+      const response = await getPosts(0, 20, "newest");
+      setPosts(response.posts || []);
+      setError(null);
+    } catch (err) {
+      setError("Failed to load posts");
+      console.error("Error fetching posts:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Refresh posts after a new post is created
+  const handlePostCreated = () => {
+    fetchPosts();
+  };
+
   return (
     <div className="col-xl-6 col-lg-6 col-md-12 col-sm-12">
       <div className="_layout_middle_wrap">
@@ -196,11 +241,27 @@ function MiddleFeed() {
             </div>
           </div>
 
-          <PostInput />
+          <PostInput onPostCreated={handlePostCreated} />
 
           {/* Timeline Posts */}
-          <TimelinePost />
-          <TimelinePost />
+          {loading && (
+            <div style={{ textAlign: "center", padding: "20px" }}>
+              <p>Loading posts...</p>
+            </div>
+          )}
+          {error && (
+            <div style={{ textAlign: "center", padding: "20px", color: "red" }}>
+              <p>{error}</p>
+            </div>
+          )}
+          {!loading && !error && posts.length === 0 && (
+            <div style={{ textAlign: "center", padding: "20px" }}>
+              <p>No posts yet. Be the first to post!</p>
+            </div>
+          )}
+          {!loading &&
+            !error &&
+            posts.map((post) => <TimelinePost key={post.id} post={post} />)}
         </div>
       </div>
     </div>

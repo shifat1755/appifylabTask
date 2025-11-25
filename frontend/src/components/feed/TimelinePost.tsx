@@ -1,9 +1,115 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { togglePostLike } from "../../service/likeService";
 
-function TimelinePost() {
+interface Post {
+  id: number;
+  content: string;
+  image_url: string | null;
+  visibility: string;
+  likes_count: number;
+  comments_count: number;
+  created_at: string;
+  author?: {
+    id: number;
+    first_name: string;
+    last_name: string;
+    email: string;
+    avatar_url: string | null;
+  };
+}
+
+interface TimelinePostProps {
+  post: Post;
+}
+
+function TimelinePost({ post }: TimelinePostProps) {
   const [showDropdown, setShowDropdown] = useState(false);
   const [commentText, setCommentText] = useState("");
+  const [avatarError, setAvatarError] = useState(false);
+  const [isLiked, setIsLiked] = useState(false);
+  const [likesCount, setLikesCount] = useState(post.likes_count);
+  const [isToggling, setIsToggling] = useState(false);
+
+  // Format date to "X minute ago" or "X hour ago" or date
+  const formatTimeAgo = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+    if (diffInSeconds < 60) {
+      return "Just now";
+    } else if (diffInSeconds < 3600) {
+      const minutes = Math.floor(diffInSeconds / 60);
+      return `${minutes} minute${minutes > 1 ? "s" : ""} ago`;
+    } else if (diffInSeconds < 86400) {
+      const hours = Math.floor(diffInSeconds / 3600);
+      return `${hours} hour${hours > 1 ? "s" : ""} ago`;
+    } else {
+      const days = Math.floor(diffInSeconds / 86400);
+      return `${days} day${days > 1 ? "s" : ""} ago`;
+    }
+  };
+
+  // Get full name
+  const getAuthorName = () => {
+    if (post.author) {
+      return `${post.author.first_name} ${post.author.last_name}`;
+    }
+    return "Unknown User";
+  };
+
+  // Get image URL - if it starts with /uploads, prepend the API base URL
+  const getImageUrl = () => {
+    if (!post.image_url) return null;
+    if (post.image_url.startsWith("/uploads")) {
+      // Remove /api from base URL for static files
+      const apiBaseURL =
+        import.meta.env.VITE_API_URL || "http://localhost:8000/api";
+      const baseURL = apiBaseURL.replace("/api", "");
+      return `${baseURL}${post.image_url}`;
+    }
+    return post.image_url;
+  };
+
+  // Get avatar URL
+  const getAvatarUrl = () => {
+    // If avatar failed to load, use default
+    if (avatarError) {
+      return "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRx-NP_Wn_xnnzlQYXWRJorxpkeyQtkKf957g&s";
+    }
+
+    if (post.author?.avatar_url) {
+      if (post.author.avatar_url.startsWith("/uploads")) {
+        // Remove /api from base URL for static files
+        const apiBaseURL =
+          import.meta.env.VITE_API_URL || "http://localhost:8000/api";
+        const baseURL = apiBaseURL.replace("/api", "");
+        return `${baseURL}${post.author.avatar_url}`;
+      }
+      return post.author.avatar_url;
+    }
+    return "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRx-NP_Wn_xnnzlQYXWRJorxpkeyQtkKf957g&s"; // Default avatar
+  };
+
+  const handleAvatarError = () => {
+    setAvatarError(true);
+  };
+
+  const handleLikeToggle = async () => {
+    if (isToggling) return; // Prevent multiple clicks
+
+    try {
+      setIsToggling(true);
+      const response = await togglePostLike(post.id);
+      setIsLiked(response.is_liked);
+      setLikesCount(response.total_likes);
+    } catch (error) {
+      console.error("Error toggling like:", error);
+    } finally {
+      setIsToggling(false);
+    }
+  };
 
   return (
     <div className="_feed_inner_timeline_post_area _b_radious6 _padd_b24 _padd_t24 _mar_b16">
@@ -12,15 +118,21 @@ function TimelinePost() {
           <div className="_feed_inner_timeline_post_box">
             <div className="_feed_inner_timeline_post_box_image">
               <img
-                src="/assets/images/post_img.png"
-                alt=""
+                src={getAvatarUrl()}
+                alt={getAuthorName()}
                 className="_post_img"
+                onError={handleAvatarError}
               />
             </div>
             <div className="_feed_inner_timeline_post_box_txt">
-              <h4 className="_feed_inner_timeline_post_box_title">Karim Saif</h4>
+              <h4 className="_feed_inner_timeline_post_box_title">
+                {getAuthorName()}
+              </h4>
               <p className="_feed_inner_timeline_post_box_para">
-                5 minute ago . <a href="#0">Public</a>
+                {formatTimeAgo(post.created_at)} .{" "}
+                <a href="#0">
+                  {post.visibility === "public" ? "Public" : "Private"}
+                </a>
               </p>
             </div>
           </div>
@@ -45,7 +157,9 @@ function TimelinePost() {
             </div>
             {/* Dropdown */}
             <div
-              className={`_feed_timeline_dropdown _timeline_dropdown ${showDropdown ? "show" : ""}`}
+              className={`_feed_timeline_dropdown _timeline_dropdown ${
+                showDropdown ? "show" : ""
+              }`}
             >
               <ul className="_feed_timeline_dropdown_list">
                 <li className="_feed_timeline_dropdown_item">
@@ -168,16 +282,12 @@ function TimelinePost() {
             </div>
           </div>
         </div>
-        <h4 className="_feed_inner_timeline_post_title">
-          -Healthy Tracking App
-        </h4>
-        <div className="_feed_inner_timeline_image">
-          <img
-            src="/assets/images/timeline_img.png"
-            alt=""
-            className="_time_img"
-          />
-        </div>
+        <h4 className="_feed_inner_timeline_post_title">{post.content}</h4>
+        {getImageUrl() && (
+          <div className="_feed_inner_timeline_image">
+            <img src={getImageUrl()!} alt="Post image" className="_time_img" />
+          </div>
+        )}
       </div>
       <div className="_feed_inner_timeline_total_reacts _padd_r24 _padd_l24 _mar_b26">
         <div className="_feed_inner_timeline_total_reacts_image">
@@ -206,48 +316,42 @@ function TimelinePost() {
             alt="Image"
             className="_react_img _rect_img_mbl_none"
           />
-          <p className="_feed_inner_timeline_total_reacts_para">9+</p>
+          <p className="_feed_inner_timeline_total_reacts_para">
+            {likesCount}+
+          </p>
         </div>
         <div className="_feed_inner_timeline_total_reacts_txt">
           <p className="_feed_inner_timeline_total_reacts_para1">
             <a href="#0">
-              <span>12</span> Comment
+              <span>{post.comments_count}</span> Comment
             </a>
           </p>
           <p className="_feed_inner_timeline_total_reacts_para2">
-            <span>122</span> Share
+            <span>0</span> Share
           </p>
         </div>
       </div>
       <div className="_feed_inner_timeline_reaction">
-        <button className="_feed_inner_timeline_reaction_emoji _feed_reaction _feed_reaction_active">
+        <button
+          className={`_feed_inner_timeline_reaction_emoji _feed_reaction ${
+            isLiked ? "_feed_reaction_active" : ""
+          }`}
+          onClick={handleLikeToggle}
+          disabled={isToggling}
+        >
           <span className="_feed_inner_timeline_reaction_link">
             <span>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="19"
                 height="19"
-                fill="none"
-                viewBox="0 0 19 19"
+                fill="currentColor"
+                viewBox="0 0 24 24"
+                style={{ color: isLiked ? "#e91e63" : "#666" }}
               >
-                <path
-                  fill="#FFCC4D"
-                  d="M9.5 19a9.5 9.5 0 100-19 9.5 9.5 0 000 19z"
-                />
-                <path
-                  fill="#664500"
-                  d="M9.5 11.083c-1.912 0-3.181-.222-4.75-.527-.358-.07-1.056 0-1.056 1.055 0 2.111 2.425 4.75 5.806 4.75 3.38 0 5.805-2.639 5.805-4.75 0-1.055-.697-1.125-1.055-1.055-1.57.305-2.838.527-4.75.527z"
-                />
-                <path
-                  fill="#fff"
-                  d="M4.75 11.611s1.583.528 4.75.528 4.75-.528 4.75-.528-1.056 2.111-4.75 2.111-4.75-2.11-4.75-2.11z"
-                />
-                <path
-                  fill="#664500"
-                  d="M6.333 8.972c.729 0 1.32-.827 1.32-1.847s-.591-1.847-1.32-1.847c-.729 0-1.32.827-1.32 1.847s.591 1.847 1.32 1.847zM12.667 8.972c.729 0 1.32-.827 1.32-1.847s-.591-1.847-1.32-1.847c-.729 0-1.32.827-1.32 1.847s.591 1.847 1.32 1.847z"
-                />
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
               </svg>
-              Haha
+              Love
             </span>
           </span>
         </button>
@@ -463,4 +567,3 @@ function TimelinePost() {
 }
 
 export default TimelinePost;
-
