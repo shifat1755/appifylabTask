@@ -1,4 +1,5 @@
 import axios from "axios"
+axios.defaults.withCredentials = true;
 
 const api = axios.create({
     baseURL: import.meta.env.VITE_API_URL || "http://localhost:8000/api",
@@ -9,6 +10,7 @@ const api = axios.create({
 
 api.interceptors.request.use((config) => {
     const token = localStorage.getItem("authToken")
+    console.log("Attaching_token_to_request:", token)
     if (token) {
         config.headers["Authorization"] = `Bearer ${token}`
     }

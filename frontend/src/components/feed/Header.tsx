@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { logout } from "../../service/authService";
 
 function Header() {
   const [showNotifyDropdown, setShowNotifyDropdown] = useState(false);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
 
   function handlelogout() {
-    localStorage.removeItem("authToken");
+    logout();
     window.location.href = "/login";
   }
 
