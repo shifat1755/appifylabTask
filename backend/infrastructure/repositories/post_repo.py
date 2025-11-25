@@ -1,8 +1,8 @@
-from typing import Optional
 from datetime import datetime, timezone
+from typing import Optional
 
 from infrastructure.data.models.post_model import Post, PostVisibility
-from sqlalchemy import select, func, desc, asc
+from sqlalchemy import asc, desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -22,6 +22,7 @@ class PostRepository:
             author_id=author_id,
             content=content,
             image_url=image_url,
+            # Remove tempimage
             visibility=visibility,
         )
         try:
@@ -65,7 +66,10 @@ class PostRepository:
             # Show public posts or private posts owned by current user
             conditions.append(
                 (Post.visibility == PostVisibility.PUBLIC)
-                | ((Post.visibility == PostVisibility.PRIVATE) & (Post.author_id == current_user_id))
+                | (
+                    (Post.visibility == PostVisibility.PRIVATE)
+                    & (Post.author_id == current_user_id)
+                )
             )
         else:
             # If no user, only show public posts
@@ -176,4 +180,3 @@ class PostRepository:
         if post:
             post.comments_count = max(0, post.comments_count - 1)
             await self.db.commit()
-

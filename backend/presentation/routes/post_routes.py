@@ -7,8 +7,9 @@ from domain.errors import (
     PostNotFoundError,
     UnauthorizedError,
 )
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile
 from infrastructure.data.database import get_db
+from infrastructure.utils.file_upload import save_uploaded_file
 from presentation.routes.dependencies import get_current_user, get_current_user_optional
 from presentation.schemas.post_schema import (
     PostCreate,
@@ -25,7 +26,9 @@ logger = logging.getLogger(__name__)
 
 @postRouter.post("", response_model=PostRead, status_code=201)
 async def create_post(
-    post_data: PostCreate,
+    content: str = Form(...),
+    image: Optional[UploadFile] = File(None),
+    visibility: Optional[str] = Form(None),
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
@@ -33,6 +36,19 @@ async def create_post(
     usecase = PostUsecase(db)
     try:
         user_id = int(current_user["user_id"])
+
+        # Save image if provided
+        image_url = None
+        if image:
+            image_url = await save_uploaded_file(image, user_id)
+
+        # Create post data
+        post_data = PostCreate(
+            content=content,
+            image_url=image_url,
+            visibility=visibility,
+        )
+
         post = await usecase.create_post(author_id=user_id, post_data=post_data)
         return PostRead.model_validate(post)
     except UnauthorizedError:

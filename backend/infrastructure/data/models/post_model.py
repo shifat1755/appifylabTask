@@ -43,7 +43,6 @@ class Post(Base):
     updated_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), onupdate=func.now(), nullable=True
     )
-
     # Relationships
     author: Mapped["User"] = relationship("User", back_populates="posts")  # noqa: F821
     comments: Mapped[list["Comment"]] = relationship(  # noqa: F821

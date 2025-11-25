@@ -51,3 +51,5 @@ dist/
 docker-compose.override.yml
 *.dockerignore
 Task_Full_Stack_Engineer
+
+/backend/uploads/
