@@ -3,6 +3,7 @@ from fastapi.staticfiles import StaticFiles
 from presentation.routes.auth_routes import authRouter
 from presentation.routes.comment_routes import commentRouter
 from presentation.routes.like_routes import likeRouter
+from presentation.routes.notification_routes import notificationRouter
 from presentation.routes.post_routes import postRouter
 from presentation.routes.websocket_routes import websocketRouter
 from starlette.middleware.cors import CORSMiddleware
@@ -28,4 +29,5 @@ app.include_router(authRouter, prefix="/api", tags=["Auth"])
 app.include_router(postRouter, prefix="/api", tags=["Posts"])
 app.include_router(commentRouter, prefix="/api", tags=["Comments"])
 app.include_router(likeRouter, prefix="/api", tags=["Likes"])
+app.include_router(notificationRouter, prefix="/api", tags=["Notifications"])
 app.include_router(websocketRouter, prefix="/api", tags=["WebSocket"])

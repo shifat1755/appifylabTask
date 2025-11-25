@@ -9,12 +9,16 @@ from infrastructure.repositories.post_repo import PostRepository
 from infrastructure.websocket.manager import manager
 from presentation.schemas.comment_schema import CommentCreate, CommentUpdate
 from sqlalchemy.ext.asyncio import AsyncSession
+from infrastructure.data.redis_notification_service import NotificationService
+from infrastructure.repositories.user_repo import UserRepository
 
 
 class CommentUsecase:
     def __init__(self, db: AsyncSession):
         self.comment_repo = CommentRepository(db)
         self.post_repo = PostRepository(db)
+        self.user_repo = UserRepository(db)
+        self.notification_service = NotificationService()
 
     async def create_comment(
         self,
@@ -23,14 +27,14 @@ class CommentUsecase:
         comment_data: CommentCreate,
     ) -> Comment:
         # Verify post exists
-        post = await self.post_repo.get_post_by_id(post_id, include_author=False)
+        post = await self.post_repo.get_post_by_id(post_id, include_author=True)
         if not post:
             raise PostNotFoundError
 
         # Check if parent comment exists (if provided)
         if comment_data.parent_comment_id:
             parent = await self.comment_repo.get_comment_by_id(
-                comment_data.parent_comment_id, include_author=False
+                comment_data.parent_comment_id, include_author=True
             )
             if not parent:
                 raise CommentNotFoundError
@@ -46,6 +50,20 @@ class CommentUsecase:
 
         # Increment post comments count
         await self.post_repo.increment_comments_count(post_id)
+
+        # Create notification (only if user is commenting on someone else's post)
+        if post.author_id != author_id:
+            actor = await self.user_repo.get_user_by_id(author_id)
+            if actor:
+                actor_name = f"{actor.first_name} {actor.last_name}"
+                await self.notification_service.create_notification(
+                    user_id=post.author_id,
+                    notification_type="post_commented",
+                    message=f"{actor_name} commented on your post",
+                    post_id=post_id,
+                    comment_id=comment.id,
+                    actor_id=author_id,
+                )
 
         # Emit WebSocket event
         if comment_data.parent_comment_id:

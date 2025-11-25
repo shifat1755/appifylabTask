@@ -9,12 +9,17 @@ import Registration from "./pages/Registration";
 import Feed from "./pages/Feed";
 import ProtectedRoute from "./components/ProtectedRoute";
 
+function RootRedirect() {
+  const isAuthenticated = localStorage.getItem("authToken");
+  return <Navigate to={isAuthenticated ? "/feed" : "/login"} replace />;
+}
+
 function App() {
   return (
     <Router>
       <Routes>
         <Route path="/login" element={<Login />} />
-        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/" element={<RootRedirect />} />
         <Route path="/register" element={<Registration />} />
         <Route
           path="/feed"
@@ -24,6 +29,7 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
   );

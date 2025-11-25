@@ -1,8 +1,10 @@
 from domain.errors import CommentNotFoundError, PostNotFoundError
 from infrastructure.data.models.like_model import Like, LikeTargetType
+from infrastructure.data.redis_notification_service import NotificationService
 from infrastructure.repositories.comment_repo import CommentRepository
 from infrastructure.repositories.like_repo import LikeRepository
 from infrastructure.repositories.post_repo import PostRepository
+from infrastructure.repositories.user_repo import UserRepository
 from infrastructure.websocket.manager import manager
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -12,6 +14,8 @@ class LikeUsecase:
         self.like_repo = LikeRepository(db)
         self.post_repo = PostRepository(db)
         self.comment_repo = CommentRepository(db)
+        self.user_repo = UserRepository(db)
+        self.notification_service = NotificationService()
 
     async def toggle_like(
         self, user_id: int, target_id: int, target_type: str
@@ -24,18 +28,21 @@ class LikeUsecase:
 
         # Verify target exists
         post_id = None
+        target_author_id = None
         if like_target_type == LikeTargetType.POST:
-            post = await self.post_repo.get_post_by_id(target_id, include_author=False)
+            post = await self.post_repo.get_post_by_id(target_id, include_author=True)
             if not post:
                 raise PostNotFoundError
             post_id = target_id
-        else:  # COMMENT or REPLY
+            target_author_id = post.author_id
+        else:  # COMMENT
             comment = await self.comment_repo.get_comment_by_id(
-                target_id, include_author=False
+                target_id, include_author=True
             )
             if not comment:
                 raise CommentNotFoundError
             post_id = comment.post_id
+            target_author_id = comment.author_id
 
         # Check if already liked
         existing_like = await self.like_repo.get_like(
@@ -62,6 +69,29 @@ class LikeUsecase:
                 await self.post_repo.increment_likes_count(target_id)
             else:
                 await self.comment_repo.increment_likes_count(target_id)
+
+            # Create notification (only if user is liking someone else's content)
+            if target_author_id and target_author_id != user_id:
+                actor = await self.user_repo.get_user_by_id(user_id)
+                if actor:
+                    actor_name = f"{actor.first_name} {actor.last_name}"
+                    if like_target_type == LikeTargetType.POST:
+                        await self.notification_service.create_notification(
+                            user_id=target_author_id,
+                            notification_type="post_liked",
+                            message=f"{actor_name} liked your post",
+                            post_id=post_id,
+                            actor_id=user_id,
+                        )
+                    else:
+                        await self.notification_service.create_notification(
+                            user_id=target_author_id,
+                            notification_type="comment_liked",
+                            message=f"{actor_name} liked your comment",
+                            post_id=post_id,
+                            comment_id=target_id,
+                            actor_id=user_id,
+                        )
 
         # Get updated like count
         total_likes = await self.like_repo.get_like_count(target_id, like_target_type)
