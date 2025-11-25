@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { togglePostLike } from "../../service/likeService";
+import { getPostComments, createComment } from "../../service/commentService";
 
 interface Post {
   id: number;
@@ -9,6 +10,21 @@ interface Post {
   visibility: string;
   likes_count: number;
   comments_count: number;
+  created_at: string;
+  author?: {
+    id: number;
+    first_name: string;
+    last_name: string;
+    email: string;
+    avatar_url: string | null;
+  };
+}
+
+interface Comment {
+  id: number;
+  content: string;
+  author_id: number;
+  likes_count: number;
   created_at: string;
   author?: {
     id: number;
@@ -30,6 +46,52 @@ function TimelinePost({ post }: TimelinePostProps) {
   const [isLiked, setIsLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(post.likes_count);
   const [isToggling, setIsToggling] = useState(false);
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [loadingComments, setLoadingComments] = useState(false);
+  const [submittingComment, setSubmittingComment] = useState(false);
+
+  // Fetch comments when component mounts
+  useEffect(() => {
+    if (post.comments_count > 0) {
+      fetchComments();
+    }
+  }, [post.id, post.comments_count]);
+
+  const fetchComments = async () => {
+    try {
+      setLoadingComments(true);
+      const response = await getPostComments(post.id);
+      setComments(response.comments || []);
+    } catch (error) {
+      console.error("Error fetching comments:", error);
+    } finally {
+      setLoadingComments(false);
+    }
+  };
+
+  const handleSubmitComment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!commentText.trim() || submittingComment) return;
+
+    try {
+      setSubmittingComment(true);
+      const newComment = await createComment(post.id, commentText.trim());
+      setComments((prev) => [newComment, ...prev]);
+      setCommentText("");
+      // Refresh comments to get updated count
+      await fetchComments();
+    } catch (error: any) {
+      console.error("Error creating comment:", error);
+      // Show user-friendly error message
+      alert(
+        error?.response?.data?.detail ||
+          error?.message ||
+          "Failed to create comment. Please try again."
+      );
+    } finally {
+      setSubmittingComment(false);
+    }
+  };
 
   // Format date to "X minute ago" or "X hour ago" or date
   const formatTimeAgo = (dateString: string) => {
@@ -109,6 +171,26 @@ function TimelinePost({ post }: TimelinePostProps) {
     } finally {
       setIsToggling(false);
     }
+  };
+
+  const getCommentAuthorName = (comment: Comment) => {
+    if (comment.author) {
+      return `${comment.author.first_name} ${comment.author.last_name}`;
+    }
+    return "Unknown User";
+  };
+
+  const getCommentAvatarUrl = (comment: Comment) => {
+    if (comment.author?.avatar_url) {
+      if (comment.author.avatar_url.startsWith("/uploads")) {
+        const apiBaseURL =
+          import.meta.env.VITE_API_URL || "http://localhost:8000/api";
+        const baseURL = apiBaseURL.replace("/api", "");
+        return `${baseURL}${comment.author.avatar_url}`;
+      }
+      return comment.author.avatar_url;
+    }
+    return "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRx-NP_Wn_xnnzlQYXWRJorxpkeyQtkKf957g&s";
   };
 
   return (
@@ -405,7 +487,10 @@ function TimelinePost({ post }: TimelinePostProps) {
       </div>
       <div className="_feed_inner_timeline_cooment_area">
         <div className="_feed_inner_comment_box">
-          <form className="_feed_inner_comment_box_form">
+          <form
+            className="_feed_inner_comment_box_form"
+            onSubmit={handleSubmitComment}
+          >
             <div className="_feed_inner_comment_box_content">
               <div className="_feed_inner_comment_box_content_image">
                 <img
@@ -466,102 +551,134 @@ function TimelinePost({ post }: TimelinePostProps) {
                 </svg>
               </button>
             </div>
+            <div
+              style={{
+                marginTop: "8px",
+                display: "flex",
+                justifyContent: "flex-end",
+              }}
+            >
+              <button
+                type="submit"
+                disabled={submittingComment || !commentText.trim()}
+                style={{
+                  padding: "6px 16px",
+                  backgroundColor: commentText.trim() ? "#1890FF" : "#ccc",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: commentText.trim() ? "pointer" : "not-allowed",
+                  fontSize: "14px",
+                  fontWeight: "500",
+                }}
+              >
+                {submittingComment ? "Sending..." : "Send"}
+              </button>
+            </div>
           </form>
         </div>
       </div>
-      <div className="_timline_comment_main">
-        <div className="_previous_comment">
-          <button type="button" className="_previous_comment_txt">
-            View 4 previous comments
-          </button>
-        </div>
-        <div className="_comment_main">
-          <div className="_comment_image">
-            <Link to="/profile" className="_comment_image_link">
-              <img
-                src="/assets/images/txt_img.png"
-                alt=""
-                className="_comment_img1"
-              />
-            </Link>
-          </div>
-          <div className="_comment_area">
-            <div className="_comment_details">
-              <div className="_comment_details_top">
-                <div className="_comment_name">
-                  <Link to="/profile">
-                    <h4 className="_comment_name_title">Radovan SkillArena</h4>
-                  </Link>
-                </div>
+
+      {/* Only show comments section if there are comments */}
+      {comments.length > 0 && (
+        <div className="_timline_comment_main">
+          {comments.length > 3 && (
+            <div className="_previous_comment">
+              <button type="button" className="_previous_comment_txt">
+                View {comments.length - 3} previous comments
+              </button>
+            </div>
+          )}
+          {comments.slice(0, 3).map((comment) => (
+            <div key={comment.id} className="_comment_main">
+              <div className="_comment_image">
+                <Link to="/profile" className="_comment_image_link">
+                  <img
+                    src={getCommentAvatarUrl(comment)}
+                    alt={getCommentAuthorName(comment)}
+                    className="_comment_img1"
+                  />
+                </Link>
               </div>
-              <div className="_comment_status">
-                <p className="_comment_status_text">
-                  <span>
-                    It is a long established fact that a reader will be
-                    distracted by the readable content of a page when looking at
-                    its layout.
-                  </span>
-                </p>
-              </div>
-              <div className="_total_reactions">
-                <div className="_total_react">
-                  <span className="_reaction_like">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="feather feather-thumbs-up"
-                    >
-                      <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
-                    </svg>
-                  </span>
-                  <span className="_reaction_heart">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="feather feather-heart"
-                    >
-                      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                    </svg>
-                  </span>
-                </div>
-                <span className="_total">198</span>
-              </div>
-              <div className="_comment_reply">
-                <div className="_comment_reply_num">
-                  <ul className="_comment_reply_list">
-                    <li>
-                      <span>Like.</span>
-                    </li>
-                    <li>
-                      <span>Reply.</span>
-                    </li>
-                    <li>
-                      <span>Share</span>
-                    </li>
-                    <li>
-                      <span className="_time_link">.21m</span>
-                    </li>
-                  </ul>
+              <div className="_comment_area">
+                <div className="_comment_details">
+                  <div className="_comment_details_top">
+                    <div className="_comment_name">
+                      <Link to="/profile">
+                        <h4 className="_comment_name_title">
+                          {getCommentAuthorName(comment)}
+                        </h4>
+                      </Link>
+                    </div>
+                  </div>
+                  <div className="_comment_status">
+                    <p className="_comment_status_text">
+                      <span>{comment.content}</span>
+                    </p>
+                  </div>
+                  <div className="_total_reactions">
+                    <div className="_total_react">
+                      <span className="_reaction_like">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className="feather feather-thumbs-up"
+                        >
+                          <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
+                        </svg>
+                      </span>
+                      <span className="_reaction_heart">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className="feather feather-heart"
+                        >
+                          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                        </svg>
+                      </span>
+                    </div>
+                    <span className="_total">{comment.likes_count}</span>
+                  </div>
+                  <div className="_comment_reply">
+                    <div className="_comment_reply_num">
+                      <ul className="_comment_reply_list">
+                        <li>
+                          <span>Like.</span>
+                        </li>
+                        <li>
+                          <span>Reply.</span>
+                        </li>
+                        <li>
+                          <span>Share</span>
+                        </li>
+                        <li>
+                          <span className="_time_link">
+                            {formatTimeAgo(comment.created_at)}
+                          </span>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          ))}
         </div>
-      </div>
+      )}
     </div>
   );
 }
