@@ -5,6 +5,7 @@ function PostInput() {
   const [postText, setPostText] = useState("");
   const [userImage, setUserImage] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [visibility, setVisibility] = useState<"public" | "private">("public");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -12,6 +13,7 @@ function PostInput() {
 
     const formData = new FormData();
     formData.append("content", postText);
+    formData.append("visibility", visibility);
     if (selectedFile) {
       formData.append("image", selectedFile);
     }
@@ -21,6 +23,7 @@ function PostInput() {
       setPostText("");
       setUserImage(null);
       setSelectedFile(null);
+      setVisibility("public"); // Reset to default
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
@@ -43,7 +46,10 @@ function PostInput() {
 
   return (
     <div className="_feed_inner_text_area  _b_radious6 _padd_b24 _padd_t24 _padd_r24 _padd_l24 _mar_b16">
-      <div className="_feed_inner_text_area_box">
+      <div
+        className="_feed_inner_text_area_box"
+        style={{ display: "flex", alignItems: "center", gap: "12px" }}
+      >
         <div className="_feed_inner_text_area_box_image">
           <img
             src="/assets/images/txt_img.png"
@@ -52,7 +58,10 @@ function PostInput() {
           />
         </div>
 
-        <div className="form-floating _feed_inner_text_area_box_form ">
+        <div
+          className="form-floating _feed_inner_text_area_box_form "
+          style={{ flex: 1 }}
+        >
           <textarea
             className="form-control _textarea"
             placeholder="Leave a comment here"
@@ -78,12 +87,48 @@ function PostInput() {
             </label>
           )}
         </div>
+
+        {/* Visibility Selector - Side by side */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            flexShrink: 0,
+          }}
+        >
+          <label
+            htmlFor="post-visibility"
+            style={{ fontSize: "14px", color: "#666", whiteSpace: "nowrap" }}
+          >
+            Visibility:
+          </label>
+          <select
+            id="post-visibility"
+            value={visibility}
+            onChange={(e) =>
+              setVisibility(e.target.value as "public" | "private")
+            }
+            style={{
+              padding: "6px 12px",
+              borderRadius: "4px",
+              border: "1px solid #ddd",
+              fontSize: "14px",
+              backgroundColor: "#fff",
+              cursor: "pointer",
+            }}
+          >
+            <option value="public">Public</option>
+            <option value="private">Private</option>
+          </select>
+        </div>
       </div>
       {userImage && (
         <div className="_image_preview">
           <img src={userImage} alt="Preview" style={{ maxWidth: 25 }} />
         </div>
       )}
+
       {/* For Desktop */}
       <div className="_feed_inner_text_area_bottom">
         <div className="_feed_inner_text_area_item">
