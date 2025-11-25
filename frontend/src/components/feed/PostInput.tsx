@@ -1,7 +1,11 @@
 import { useState, useRef } from "react";
 import { createPost } from "../../service/postService";
 
-function PostInput() {
+interface PostInputProps {
+  onPostCreated?: () => void;
+}
+
+function PostInput({ onPostCreated }: PostInputProps) {
   const [postText, setPostText] = useState("");
   const [userImage, setUserImage] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -26,6 +30,10 @@ function PostInput() {
       setVisibility("public"); // Reset to default
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
+      }
+      // Call callback to refresh posts
+      if (onPostCreated) {
+        onPostCreated();
       }
     });
   };
