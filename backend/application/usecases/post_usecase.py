@@ -32,7 +32,7 @@ class PostUsecase:
     async def get_post(
         self, post_id: int, current_user_id: Optional[int] = None
     ) -> Post:
-        post = await self.post_repo.get_post_by_id(post_id)
+        post = await self.post_repo.get_post_by_id(post_id, include_author=True)
         if not post:
             raise PostNotFoundError
 

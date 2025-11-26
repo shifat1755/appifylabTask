@@ -35,7 +35,7 @@ class PostRepository:
             raise e
 
     async def get_post_by_id(
-        self, post_id: int, include_author: bool = True
+        self, post_id: int, include_author: bool = False
     ) -> Optional[Post]:
         stmt = select(Post).where(Post.id == post_id)
         if include_author:

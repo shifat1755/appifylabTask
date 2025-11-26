@@ -42,7 +42,7 @@ class CommentRepository:
             raise e
 
     async def get_comment_by_id(
-        self, comment_id: int, include_author: bool = True
+        self, comment_id: int, include_author: bool = False
     ) -> Optional[Comment]:
         stmt = select(Comment).where(Comment.id == comment_id)
         if include_author:
