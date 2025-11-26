@@ -4,7 +4,7 @@
 
 A full-stack social media feed application built with FastAPI (backend) and React with TypeScript (frontend). The application provides core social media functionalities including user authentication, post creation with images, commenting, liking, and notifications.
 
-## Architecture
+## Technology Overview
 
 The application follows a **clean architecture** pattern with clear separation of concerns:
 
