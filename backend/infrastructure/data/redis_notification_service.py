@@ -8,11 +8,9 @@ from redis.asyncio import Redis
 
 class NotificationService:
     def __init__(self, redis_url: str | None = None):
-        # Use a different Redis DB for notifications (e.g., DB 2)
-        redis_url = (
-            redis_url or f"redis://{RedisConfig.REDIS_HOST}:{RedisConfig.REDIS_PORT}/2"
+        self.redis: Redis = Redis.from_url(
+            redis_url or RedisConfig.get_notification_url(), decode_responses=True
         )
-        self.redis: Redis = Redis.from_url(redis_url, decode_responses=True)
 
     async def create_notification(
         self,
