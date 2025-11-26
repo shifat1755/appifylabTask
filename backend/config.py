@@ -34,7 +34,7 @@ class RedisConfig:
     REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
     REDIS_DB_TOKENS = int(os.getenv("REDIS_DB_REFRESH_TOKENS", 0))
     REDIS_DB_CACHE = int(os.getenv("REDIS_DB_LRU_CACHE", 1))
-    REDIS_DB_NOTIFICATION = int(os.getenv("REdIS_DB_NOTIFICATIONS", 2))
+    REDIS_DB_NOTIFICATION = int(os.getenv("REDIS_DB_NOTIFICATIONS", 2))
 
     @classmethod
     def get_tokens_url(cls) -> str:
