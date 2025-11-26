@@ -5,7 +5,6 @@ from infrastructure.repositories.comment_repo import CommentRepository
 from infrastructure.repositories.like_repo import LikeRepository
 from infrastructure.repositories.post_repo import PostRepository
 from infrastructure.repositories.user_repo import UserRepository
-from infrastructure.websocket.manager import manager
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
@@ -95,30 +94,6 @@ class LikeUsecase:
 
         # Get updated like count
         total_likes = await self.like_repo.get_like_count(target_id, like_target_type)
-
-        # Emit WebSocket event
-        if like_target_type == LikeTargetType.POST:
-            await manager.broadcast_to_post(
-                post_id,
-                {
-                    "type": "post:liked",
-                    "post_id": target_id,
-                    "user_id": user_id,
-                    "is_liked": is_liked,
-                    "total_likes": total_likes,
-                },
-            )
-        else:
-            await manager.broadcast_to_post(
-                post_id,
-                {
-                    "type": "comment:liked",
-                    "comment_id": target_id,
-                    "user_id": user_id,
-                    "is_liked": is_liked,
-                    "total_likes": total_likes,
-                },
-            )
 
         return is_liked, total_likes
 

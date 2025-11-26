@@ -199,8 +199,6 @@ The application follows a **clean architecture** pattern with clear separation o
 
 - `GET /notifications` - Get and consume user notifications
 
-### WebSocket (`/api/ws/posts/{post_id}`)
-
 ## Security Features
 
 1. **Password Hashing**: bcrypt with salt rounds
@@ -219,8 +217,7 @@ The application follows a **clean architecture** pattern with clear separation o
 4. **Use Case Pattern**: Business logic encapsulated in use case classes
 5. **Denormalized Counts**: Like and comment counts stored on parent models to avoid expensive joins
 6. **Redis for Notifications**: Fast, ephemeral storage suitable for real-time notifications
-7. **WebSocket per Post**: Efficient broadcasting by organizing connections by post_id
-8. **Optional Authentication**: Some endpoints accept optional auth to support both authenticated and anonymous access patterns
+7. **Optional Authentication**: Some endpoints accept optional auth to support both authenticated and anonymous access patterns
 
 ## Future Enhancements
 
@@ -231,6 +228,5 @@ Potential areas for extension:
 - Rich text editing for posts/comments
 - Image optimization and CDN integration
 - Notification persistence for historical viewing
-- WebSocket connection pooling optimization
 - Rate limiting and API throttling
 - Proper image storage(s3,GCS)

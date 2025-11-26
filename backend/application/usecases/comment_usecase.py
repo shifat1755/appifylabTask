@@ -4,13 +4,12 @@ from domain.errors import (
     UnauthorizedError,
 )
 from infrastructure.data.models.comment_model import Comment
+from infrastructure.data.redis_notification_service import NotificationService
 from infrastructure.repositories.comment_repo import CommentRepository
 from infrastructure.repositories.post_repo import PostRepository
-from infrastructure.websocket.manager import manager
+from infrastructure.repositories.user_repo import UserRepository
 from presentation.schemas.comment_schema import CommentCreate, CommentUpdate
 from sqlalchemy.ext.asyncio import AsyncSession
-from infrastructure.data.redis_notification_service import NotificationService
-from infrastructure.repositories.user_repo import UserRepository
 
 
 class CommentUsecase:
@@ -64,29 +63,6 @@ class CommentUsecase:
                     comment_id=comment.id,
                     actor_id=author_id,
                 )
-
-        # Emit WebSocket event
-        if comment_data.parent_comment_id:
-            await manager.broadcast_to_post(
-                post_id,
-                {
-                    "type": "comment:replied",
-                    "comment_id": comment.id,
-                    "parent_comment_id": comment_data.parent_comment_id,
-                    "post_id": post_id,
-                    "author_id": author_id,
-                },
-            )
-        else:
-            await manager.broadcast_to_post(
-                post_id,
-                {
-                    "type": "post:commented",
-                    "comment_id": comment.id,
-                    "post_id": post_id,
-                    "author_id": author_id,
-                },
-            )
 
         return comment
 
