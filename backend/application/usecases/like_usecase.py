@@ -29,14 +29,14 @@ class LikeUsecase:
         post_id = None
         target_author_id = None
         if like_target_type == LikeTargetType.POST:
-            post = await self.post_repo.get_post_by_id(target_id, include_author=True)
+            post = await self.post_repo.get_post_by_id(target_id, include_author=False)
             if not post:
                 raise PostNotFoundError
             post_id = target_id
             target_author_id = post.author_id
         else:  # COMMENT
             comment = await self.comment_repo.get_comment_by_id(
-                target_id, include_author=True
+                target_id, include_author=False
             )
             if not comment:
                 raise CommentNotFoundError

@@ -26,14 +26,14 @@ class CommentUsecase:
         comment_data: CommentCreate,
     ) -> Comment:
         # Verify post exists
-        post = await self.post_repo.get_post_by_id(post_id, include_author=True)
+        post = await self.post_repo.get_post_by_id(post_id, include_author=False)
         if not post:
             raise PostNotFoundError
 
         # Check if parent comment exists (if provided)
         if comment_data.parent_comment_id:
             parent = await self.comment_repo.get_comment_by_id(
-                comment_data.parent_comment_id, include_author=True
+                comment_data.parent_comment_id, include_author=False
             )
             if not parent:
                 raise CommentNotFoundError
