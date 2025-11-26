@@ -44,8 +44,8 @@ async def login_user(
             key="refresh_token",
             value=login_data.refresh_token,
             httponly=True,
-            secure=True,
-            samesite="Strict",
+            secure=False,
+            samesite="Lax",
             path="/api/auth/refresh",
         )
         # Set session_id in HttpOnly cookie
@@ -53,8 +53,8 @@ async def login_user(
             key="session_id",
             value=login_data.session_id,
             httponly=True,
-            secure=True,
-            samesite="Strict",
+            secure=False,
+            samesite="Lax",
             path="/api/",
         )
 
@@ -113,8 +113,8 @@ async def refresh(
         key="refresh_token",
         value=new_refresh,
         httponly=True,
-        secure=True,
-        samesite="Strict",
+        secure=False,
+        samesite="lax",
         path="/api/auth/refresh",
     )
     # Set session_id in HttpOnly cookie
@@ -122,8 +122,8 @@ async def refresh(
         key="session_id",
         value=session_id,
         httponly=True,
-        secure=True,
-        samesite="Strict",
+        secure=False,
+        samesite="Lax",
         path="/api/",
     )
 
