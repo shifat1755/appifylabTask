@@ -38,7 +38,7 @@ function Header() {
     // Fetch immediately
     fetchNotifications();
 
-    const interval = setInterval(fetchNotifications, 15000);
+    const interval = setInterval(fetchNotifications, 10000);
 
     return () => clearInterval(interval);
   }, []);
