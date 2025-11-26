@@ -9,3 +9,4 @@ passlib == 1.7.4
 bcrypt  == 5.0
 redis[asyncio]==6.4.0
 PyJWT==2.10.1
+python-multipart==0.0.20
