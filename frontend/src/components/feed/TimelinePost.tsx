@@ -2,38 +2,8 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { togglePostLike } from "../../service/likeService";
 import { getPostComments, createComment } from "../../service/commentService";
-
-interface Post {
-  id: number;
-  content: string;
-  image_url: string | null;
-  visibility: string;
-  likes_count: number;
-  comments_count: number;
-  created_at: string;
-  author?: {
-    id: number;
-    first_name: string;
-    last_name: string;
-    email: string;
-    avatar_url: string | null;
-  };
-}
-
-interface Comment {
-  id: number;
-  content: string;
-  author_id: number;
-  likes_count: number;
-  created_at: string;
-  author?: {
-    id: number;
-    first_name: string;
-    last_name: string;
-    email: string;
-    avatar_url: string | null;
-  };
-}
+import type { Post } from "../../types/post";
+import type { Comment } from "../../types/comment";
 
 interface TimelinePostProps {
   post: Post;

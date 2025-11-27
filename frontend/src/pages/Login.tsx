@@ -2,12 +2,14 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { login } from "../service/authService";
+import { useAuthContext } from "../context/AuthContext";
 
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(true);
   const navigate = useNavigate();
+  const { setUser } = useAuthContext();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -16,6 +18,7 @@ function Login() {
       .then((data) => {
         localStorage.setItem("authToken", data.access_token);
         console.log("login_data", data);
+        setUser(data.user);
         navigate("/feed");
       })
       .catch((err: any) => {

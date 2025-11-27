@@ -5,8 +5,10 @@ import {
   getNotifications,
   type Notification,
 } from "../../service/notificationService";
+import { useAuthContext } from "../../context/AuthContext";
 
 function Header() {
+  const { user } = useAuthContext();
   const [showNotifyDropdown, setShowNotifyDropdown] = useState(false);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -266,7 +268,9 @@ function Header() {
               />
             </div>
             <div className="_header_nav_dropdown">
-              <p className="_header_nav_para">Dylan Field</p>
+              <p className="_header_nav_para">
+                {user?.first_name} {user?.last_name}
+              </p>
               <button
                 id="_profile_drop_show_btn"
                 className="_header_nav_dropdown_btn _dropdown_toggle"
@@ -303,7 +307,9 @@ function Header() {
                   />
                 </div>
                 <div className="_nav_profile_dropdown_info_txt">
-                  <h4 className="_nav_dropdown_title">Dylan Field</h4>
+                  <h4 className="_nav_dropdown_title">
+                    {user?.first_name} {user?.last_name}
+                  </h4>
                   <Link to="/profile" className="_nav_drop_profile">
                     View Profile
                   </Link>
