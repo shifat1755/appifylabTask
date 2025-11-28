@@ -34,7 +34,7 @@ class RedisConfig:
     REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
     REDIS_DB_TOKENS = int(os.getenv("REDIS_DB_REFRESH_TOKENS", 0))
     REDIS_DB_CACHE = int(os.getenv("REDIS_DB_LRU_CACHE", 1))
-    REDIS_DB_NOTIFICATION = int(os.getenv("REDIS_DB_NOTIFICATIONS", 2))
+    REDIS_DB_NOTIFICATION = int(os.getenv("REdIS_DB_NOTIFICATIONS", 2))
 
     @classmethod
     def get_tokens_url(cls) -> str:
@@ -56,3 +56,9 @@ class JWTConfig:
     ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
     ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("JWT_ACCESS_EXPIRE_MINUTES", 15))
     REFRESH_TOKEN_EXPIRE_DAYS = int(os.getenv("JWT_REFRESH_EXPIRE_DAYS", 7))
+
+
+class DefaultAvatar:
+    "DefaultAvatar provided in .env"
+
+    URL = os.getenv("DEFAULT_AVATAR")
