@@ -1,11 +1,27 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Header from "../components/feed/Header";
 import LeftSidebar from "../components/feed/LeftSidebar";
 import MiddleFeed from "../components/feed/MiddleFeed";
 import RightSidebar from "../components/feed/RightSidebar";
+import { useAuthContext } from "../context/AuthContext";
+import { userInfo } from "../service/userService";
 
 function Feed() {
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const { setUser } = useAuthContext();
+
+  useEffect(() => {
+    fetchUser();
+  }, []);
+
+  const fetchUser = async () => {
+    try {
+      const response = await userInfo();
+      setUser(response);
+    } catch (err) {
+      throw err;
+    }
+  };
 
   const toggleDarkMode = () => {
     setIsDarkMode(!isDarkMode);
@@ -13,7 +29,11 @@ function Feed() {
   };
 
   return (
-    <div className={`_layout _layout_main_wrapper ${isDarkMode ? "dark-mode" : ""}`}>
+    <div
+      className={`_layout _layout_main_wrapper ${
+        isDarkMode ? "dark-mode" : ""
+      }`}
+    >
       {/* Mode Switching Button */}
       <div className="_layout_mode_swithing_btn">
         <button
@@ -65,7 +85,7 @@ function Feed() {
 
       <div className="_main_layout">
         <Header />
-        
+
         {/* Mobile Menu */}
         <div className="_header_mobile_menu">
           <div className="_header_mobile_menu_wrap">
@@ -264,4 +284,3 @@ function Feed() {
 }
 
 export default Feed;
-

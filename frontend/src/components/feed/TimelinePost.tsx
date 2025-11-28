@@ -9,13 +9,9 @@ interface TimelinePostProps {
   post: Post;
 }
 
-const DEFAULT_AVATAR =
-  "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRx-NP_Wn_xnnzlQYXWRJorxpkeyQtkKf957g&s";
-
 function TimelinePost({ post }: TimelinePostProps) {
   const [showDropdown, setShowDropdown] = useState(false);
   const [commentText, setCommentText] = useState("");
-  const [avatarError, setAvatarError] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(post.likes_count);
   const [isToggling, setIsToggling] = useState(false);
@@ -64,11 +60,6 @@ function TimelinePost({ post }: TimelinePostProps) {
     return url;
   };
 
-  const getAvatarUrl = (author?: { avatar_url: string | null }) => {
-    if (avatarError || !author?.avatar_url) return DEFAULT_AVATAR;
-    return getImageUrl(author.avatar_url) || DEFAULT_AVATAR;
-  };
-
   const handleLikeToggle = async () => {
     if (isToggling) return;
     try {
@@ -113,10 +104,9 @@ function TimelinePost({ post }: TimelinePostProps) {
           <div className="_feed_inner_timeline_post_box">
             <div className="_feed_inner_timeline_post_box_image">
               <img
-                src={getAvatarUrl(post.author)}
+                src={post.author?.avatar_url}
                 alt={getFullName(post.author)}
                 className="_post_img"
-                onError={() => setAvatarError(true)}
               />
             </div>
             <div className="_feed_inner_timeline_post_box_txt">
@@ -283,7 +273,7 @@ function TimelinePost({ post }: TimelinePostProps) {
               <div className="_comment_image">
                 <Link to="/profile" className="_comment_image_link">
                   <img
-                    src={getAvatarUrl(comment.author)}
+                    src={comment.author?.avatar_url}
                     alt={getFullName(comment.author)}
                     className="_comment_img1"
                   />

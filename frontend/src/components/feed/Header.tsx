@@ -12,7 +12,7 @@ function Header() {
   const [showNotifyDropdown, setShowNotifyDropdown] = useState(false);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
-
+  console.log("userInfoFromHeader", user);
   // Poll for notifications every few seconds (only when user is logged in)
   useEffect(() => {
     const fetchNotifications = async () => {
@@ -261,11 +261,13 @@ function Header() {
           </ul>
           <div className="_header_nav_profile">
             <div className="_header_nav_profile_image">
-              <img
-                src="/assets/images/profile.png"
-                alt="Image"
-                className="_nav_profile_img"
-              />
+              {user && (
+                <img
+                  src={user.avatar_url}
+                  alt="Image"
+                  className="_nav_profile_img"
+                />
+              )}
             </div>
             <div className="_header_nav_dropdown">
               <p className="_header_nav_para">
@@ -300,11 +302,13 @@ function Header() {
             >
               <div className="_nav_profile_dropdown_info">
                 <div className="_nav_profile_dropdown_image">
-                  <img
-                    src="/assets/images/profile.png"
-                    alt="Image"
-                    className="_nav_drop_img"
-                  />
+                  {user && (
+                    <img
+                      src={user?.avatar_url}
+                      alt="Image"
+                      className="_nav_drop_img"
+                    />
+                  )}
                 </div>
                 <div className="_nav_profile_dropdown_info_txt">
                   <h4 className="_nav_dropdown_title">
