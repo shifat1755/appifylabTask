@@ -4,7 +4,7 @@ export interface User {
     last_name: string;
     email: string;
     phone: string | null;
-    avatar_url: string | null;
+    avatar_url: string;
     bio: string | null;
     created_at: string;
     is_active: boolean;

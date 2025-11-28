@@ -1,11 +1,13 @@
 import { useState, useRef } from "react";
 import { createPost } from "../../service/postService";
+import { useAuthContext } from "../../context/AuthContext";
 
 interface PostInputProps {
   onPostCreated?: () => void;
 }
 
 function PostInput({ onPostCreated }: PostInputProps) {
+  const { user } = useAuthContext();
   const [postText, setPostText] = useState("");
   const [userImage, setUserImage] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -59,11 +61,9 @@ function PostInput({ onPostCreated }: PostInputProps) {
         style={{ display: "flex", alignItems: "center", gap: "12px" }}
       >
         <div className="_feed_inner_text_area_box_image">
-          <img
-            src="/assets/images/txt_img.png"
-            alt="Image"
-            className="_txt_img"
-          />
+          {user && (
+            <img src={user.avatar_url} alt="Image" className="_txt_img" />
+          )}
         </div>
 
         <div
