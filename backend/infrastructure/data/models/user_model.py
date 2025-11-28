@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from config import DefaultAvatar
 from infrastructure.data.database import Base
 from sqlalchemy import Boolean, DateTime, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -25,7 +26,9 @@ class User(Base):
 
     # Profile
     bio: Mapped[str | None] = mapped_column(Text, nullable=True)
-    avatar_url: Mapped[str | None] = mapped_column(String, nullable=True)
+    avatar_url: Mapped[str | None] = mapped_column(
+        String, nullable=True, default=DefaultAvatar
+    )
 
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(
