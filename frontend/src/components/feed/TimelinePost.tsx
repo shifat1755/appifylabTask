@@ -103,11 +103,13 @@ function TimelinePost({ post }: TimelinePostProps) {
         <div className="_feed_inner_timeline_post_top">
           <div className="_feed_inner_timeline_post_box">
             <div className="_feed_inner_timeline_post_box_image">
-              <img
-                src={post.author?.avatar_url}
-                alt={getFullName(post.author)}
-                className="_post_img"
-              />
+              {post.author?.avatar_url && (
+                <img
+                  src={post.author?.avatar_url}
+                  alt={getFullName(post.author)}
+                  className="_post_img"
+                />
+              )}
             </div>
             <div className="_feed_inner_timeline_post_box_txt">
               <h4 className="_feed_inner_timeline_post_box_title">
