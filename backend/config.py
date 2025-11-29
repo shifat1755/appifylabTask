@@ -62,3 +62,12 @@ class DefaultAvatar:
     "DefaultAvatar provided in .env"
 
     URL = os.getenv("DEFAULT_AVATAR")
+
+
+class s3Config:
+    """S3-related configuration."""
+
+    S3_ACCESS_KEY = os.getenv("s3_ACCESS_KEY")
+    S3_SECRET_KEY = os.getenv("s3_SECRET_KEY")
+    S3_BUCKET_NAME = os.getenv("s3_BUCKET_NAME")
+    ENDPOINT_URL = os.getenv("ENDPOINT_URL")

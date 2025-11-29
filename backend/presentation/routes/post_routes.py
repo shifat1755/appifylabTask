@@ -9,7 +9,7 @@ from domain.errors import (
 )
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile
 from infrastructure.data.database import get_db
-from infrastructure.utils.file_upload import save_uploaded_file
+from infrastructure.utils.file_handler import storefile
 from presentation.routes.dependencies import get_current_user, get_current_user_optional
 from presentation.schemas.post_schema import (
     PostCreate,
@@ -40,7 +40,7 @@ async def create_post(
         # Save image if provided
         image_url = None
         if image:
-            image_url = await save_uploaded_file(image, user_id)
+            image_url = await storefile(image, user_id)
 
         # Create post data
         post_data = PostCreate(
