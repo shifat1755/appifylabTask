@@ -22,7 +22,6 @@ class PostRepository:
             author_id=author_id,
             content=content,
             image_url=image_url,
-            # Remove tempimage
             visibility=visibility,
         )
         try:

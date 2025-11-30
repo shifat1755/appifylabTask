@@ -18,7 +18,7 @@ async def storefile(file: UploadFile, user_id: int) -> str:
         str: URL of the uploaded file
     """
     s3_client = S3Client()
-    unique_filename = f"user_{user_id}_{file.filename}_{uuid4().hex}"
+    unique_filename = f"user_{user_id}_{uuid4().hex}.{file.filename.split('.')[-1]}"
     UPLOAD_DIR = Path("uploads/posts")
     UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 

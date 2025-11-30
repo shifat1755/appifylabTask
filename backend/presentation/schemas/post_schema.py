@@ -14,7 +14,7 @@ class PostVisibilityEnum(str, Enum):
 # Base schemas
 # --------------------------
 class PostBase(BaseModel):
-    content: str = Field(..., min_length=1, max_length=10000)
+    content: str = Field(..., min_length=0, max_length=10000)
     image_url: Optional[str] = None
     visibility: Optional[PostVisibilityEnum] = PostVisibilityEnum.PUBLIC
 

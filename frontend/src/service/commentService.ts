@@ -1,4 +1,4 @@
-import api from "./api";
+import api from "./axiosApi";
 
 export function getPostComments(postId: number, skip: number = 0, limit: number = 50) {
     return api.get(`/posts/${postId}/comments`, {
