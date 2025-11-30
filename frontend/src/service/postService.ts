@@ -1,10 +1,8 @@
-import api from "./api";
+import api from "./axiosApi";
 
-export function createPost(data: FormData) {
-    return api.post("/posts", data, {
-        headers: {
-            "Content-Type": "multipart/form-data",
-        },
+export function createPost(content: string | null, visibility: string, image_url: string | null) {
+    return api.post("/posts", {
+        content, visibility, image_url
     })
         .then(res => res.data)
         .catch(() => {

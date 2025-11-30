@@ -7,9 +7,9 @@ from domain.errors import (
     PostNotFoundError,
     UnauthorizedError,
 )
-from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile
+from fastapi import APIRouter, Depends, HTTPException, Query
 from infrastructure.data.database import get_db
-from infrastructure.utils.file_handler import storefile
+from infrastructure.data.s3_client import S3Client
 from presentation.routes.dependencies import get_current_user, get_current_user_optional
 from presentation.schemas.post_schema import (
     PostCreate,
@@ -26,9 +26,7 @@ logger = logging.getLogger(__name__)
 
 @postRouter.post("", response_model=PostRead, status_code=201)
 async def create_post(
-    content: str = Form(...),
-    image: Optional[UploadFile] = File(None),
-    visibility: Optional[str] = Form(None),
+    post_data: PostCreate,
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
@@ -36,19 +34,6 @@ async def create_post(
     usecase = PostUsecase(db)
     try:
         user_id = int(current_user["user_id"])
-
-        # Save image if provided
-        image_url = None
-        if image:
-            image_url = await storefile(image, user_id)
-
-        # Create post data
-        post_data = PostCreate(
-            content=content,
-            image_url=image_url,
-            visibility=visibility,
-        )
-
         post = await usecase.create_post(author_id=user_id, post_data=post_data)
         return PostRead.model_validate(post)
     except UnauthorizedError:
@@ -80,8 +65,18 @@ async def get_posts(
             current_user_id=current_user_id,
             sort_by=sort_by,
         )
+        posts = [PostRead.model_validate(post) for post in posts]
+        s3_client = S3Client()
+        for post in posts:
+            if post.image_url:
+                filename = post.image_url.split("/")[-1]
+                post.image_url = s3_client.generate_presigned_url(
+                    filename, "get_object"
+                )
+
+        print("posts_fetched", posts)
         return PostList(
-            posts=[PostRead.model_validate(post) for post in posts],
+            posts=posts,
             total=total,
             skip=skip,
             limit=limit,
