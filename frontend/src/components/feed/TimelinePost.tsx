@@ -17,14 +17,15 @@ function TimelinePost({ post }: TimelinePostProps) {
   const [isToggling, setIsToggling] = useState(false);
   const [comments, setComments] = useState<Comment[]>([]);
   const [submittingComment, setSubmittingComment] = useState(false);
+  const [showComments, setShowComments] = useState(false);
 
   useEffect(() => {
-    if (post.comments_count > 0) {
+    if (post.comments_count > 0 && showComments) {
       getPostComments(post.id)
         .then((response) => setComments(response.comments || []))
         .catch((error) => console.error("Error fetching comments:", error));
     }
-  }, [post.id, post.comments_count]);
+  }, [showComments]);
 
   // Utility functions
   const formatTimeAgo = (dateString: string) => {
@@ -179,7 +180,7 @@ function TimelinePost({ post }: TimelinePostProps) {
         </div>
         <div className="_feed_inner_timeline_total_reacts_txt">
           <p className="_feed_inner_timeline_total_reacts_para1">
-            <a href="#0">
+            <a href="#0" onClick={() => setShowComments(true)}>
               <span>{post.comments_count}</span> Comment
             </a>
           </p>
@@ -209,118 +210,121 @@ function TimelinePost({ post }: TimelinePostProps) {
           </span>
         </button>
       </div>
-
-      <div className="_feed_inner_timeline_cooment_area">
-        <div className="_feed_inner_comment_box">
-          <form
-            className="_feed_inner_comment_box_form"
-            onSubmit={handleSubmitComment}
-          >
-            <div className="_feed_inner_comment_box_content">
-              <div className="_feed_inner_comment_box_content_image">
-                <img
-                  src="/assets/images/comment_img.png"
-                  alt=""
-                  className="_comment_img"
-                />
-              </div>
-              <div className="_feed_inner_comment_box_content_txt">
-                <textarea
-                  className="form-control _comment_textarea"
-                  placeholder="Write a comment"
-                  value={commentText}
-                  onChange={(e) => setCommentText(e.target.value)}
-                />
-              </div>
-            </div>
-            <div
-              style={{
-                marginTop: "8px",
-                display: "flex",
-                justifyContent: "flex-end",
-              }}
-            >
-              <button
-                type="submit"
-                disabled={submittingComment || !commentText.trim()}
-                style={{
-                  padding: "6px 16px",
-                  backgroundColor: commentText.trim() ? "#1890FF" : "#ccc",
-                  color: "#fff",
-                  border: "none",
-                  borderRadius: "4px",
-                  cursor: commentText.trim() ? "pointer" : "not-allowed",
-                  fontSize: "14px",
-                  fontWeight: "500",
-                }}
+      {showComments && (
+        <div>
+          {" "}
+          <div className="_feed_inner_timeline_cooment_area">
+            <div className="_feed_inner_comment_box">
+              <form
+                className="_feed_inner_comment_box_form"
+                onSubmit={handleSubmitComment}
               >
-                {submittingComment ? "Sending..." : "Send"}
-              </button>
+                <div className="_feed_inner_comment_box_content">
+                  <div className="_feed_inner_comment_box_content_image">
+                    <img
+                      src="/assets/images/comment_img.png"
+                      alt=""
+                      className="_comment_img"
+                    />
+                  </div>
+                  <div className="_feed_inner_comment_box_content_txt">
+                    <textarea
+                      className="form-control _comment_textarea"
+                      placeholder="Write a comment"
+                      value={commentText}
+                      onChange={(e) => setCommentText(e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div
+                  style={{
+                    marginTop: "8px",
+                    display: "flex",
+                    justifyContent: "flex-end",
+                  }}
+                >
+                  <button
+                    type="submit"
+                    disabled={submittingComment || !commentText.trim()}
+                    style={{
+                      padding: "6px 16px",
+                      backgroundColor: commentText.trim() ? "#1890FF" : "#ccc",
+                      color: "#fff",
+                      border: "none",
+                      borderRadius: "4px",
+                      cursor: commentText.trim() ? "pointer" : "not-allowed",
+                      fontSize: "14px",
+                      fontWeight: "500",
+                    }}
+                  >
+                    {submittingComment ? "Sending..." : "Send"}
+                  </button>
+                </div>
+              </form>
             </div>
-          </form>
-        </div>
-      </div>
-
-      {comments.length > 0 && (
-        <div className="_timline_comment_main">
-          {comments.length > 3 && (
-            <div className="_previous_comment">
-              <button type="button" className="_previous_comment_txt">
-                View {comments.length - 3} previous comments
-              </button>
-            </div>
-          )}
-          {comments.slice(0, 3).map((comment) => (
-            <div key={comment.id} className="_comment_main">
-              <div className="_comment_image">
-                <Link to="/profile" className="_comment_image_link">
-                  <img
-                    src={comment.author?.avatar_url}
-                    alt={getFullName(comment.author)}
-                    className="_comment_img1"
-                  />
-                </Link>
-              </div>
-              <div className="_comment_area">
-                <div className="_comment_details">
-                  <div className="_comment_details_top">
-                    <div className="_comment_name">
-                      <Link to="/profile">
-                        <h4 className="_comment_name_title">
-                          {getFullName(comment.author)}
-                        </h4>
-                      </Link>
-                    </div>
+          </div>
+          {comments.length > 0 && (
+            <div className="_timline_comment_main">
+              {comments.length > 3 && (
+                <div className="_previous_comment">
+                  <button type="button" className="_previous_comment_txt">
+                    View {comments.length - 3} previous comments
+                  </button>
+                </div>
+              )}
+              {comments.slice(0, 3).map((comment) => (
+                <div key={comment.id} className="_comment_main">
+                  <div className="_comment_image">
+                    <Link to="/profile" className="_comment_image_link">
+                      <img
+                        src={comment.author?.avatar_url}
+                        alt={getFullName(comment.author)}
+                        className="_comment_img1"
+                      />
+                    </Link>
                   </div>
-                  <div className="_comment_status">
-                    <p className="_comment_status_text">
-                      <span>{comment.content}</span>
-                    </p>
-                  </div>
-                  <div className="_total_reactions">
-                    <span className="_total">{comment.likes_count}</span>
-                  </div>
-                  <div className="_comment_reply">
-                    <div className="_comment_reply_num">
-                      <ul className="_comment_reply_list">
-                        <li>
-                          <span>Like.</span>
-                        </li>
-                        <li>
-                          <span>Reply.</span>
-                        </li>
-                        <li>
-                          <span className="_time_link">
-                            {formatTimeAgo(comment.created_at)}
-                          </span>
-                        </li>
-                      </ul>
+                  <div className="_comment_area">
+                    <div className="_comment_details">
+                      <div className="_comment_details_top">
+                        <div className="_comment_name">
+                          <Link to="/profile">
+                            <h4 className="_comment_name_title">
+                              {getFullName(comment.author)}
+                            </h4>
+                          </Link>
+                        </div>
+                      </div>
+                      <div className="_comment_status">
+                        <p className="_comment_status_text">
+                          <span>{comment.content}</span>
+                        </p>
+                      </div>
+                      <div className="_total_reactions">
+                        <span className="_total">{comment.likes_count}</span>
+                      </div>
+                      <div className="_comment_reply">
+                        <div className="_comment_reply_num">
+                          <ul className="_comment_reply_list">
+                            <li>
+                              <span>Like.</span>
+                            </li>
+                            <li>
+                              <span>Reply.</span>
+                            </li>
+                            <li>
+                              <span className="_time_link">
+                                {formatTimeAgo(comment.created_at)}
+                              </span>
+                            </li>
+                          </ul>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
+              ))}
             </div>
-          ))}
+          )}
         </div>
       )}
     </div>
