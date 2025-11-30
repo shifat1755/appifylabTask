@@ -1,4 +1,4 @@
-import api from "./api";
+import api from "./axiosApi";
 
 export async function userInfo() {
     try {

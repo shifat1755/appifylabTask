@@ -1,4 +1,4 @@
-import api from "./api";
+import api from "./axiosApi";
 
 export function togglePostLike(postId: number) {
     return api.post(`/posts/${postId}/like`)

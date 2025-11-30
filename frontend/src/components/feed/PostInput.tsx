@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { createPost } from "../../service/postService";
 import { useAuthContext } from "../../context/AuthContext";
-
+import { fileUpload } from "../../utils/FileUpload";
 interface PostInputProps {
   onPostCreated?: () => void;
 }
@@ -10,26 +10,19 @@ function PostInput({ onPostCreated }: PostInputProps) {
   const { user } = useAuthContext();
   const [postText, setPostText] = useState("");
   const [userImage, setUserImage] = useState<string | null>(null);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [fileUrl, setFileUrl] = useState<string | null>(null);
   const [visibility, setVisibility] = useState<"public" | "private">("public");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    const formData = new FormData();
-    formData.append("content", postText);
-    formData.append("visibility", visibility);
-    if (selectedFile) {
-      formData.append("image", selectedFile);
-    }
-
-    createPost(formData).then((response) => {
+    createPost(postText, visibility, fileUrl).then((response) => {
       console.log("Post created successfully:", response);
       setPostText("");
       setUserImage(null);
-      setSelectedFile(null);
-      setVisibility("public"); // Reset to default
+      setFileUrl(null);
+      setVisibility("public");
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
@@ -43,8 +36,10 @@ function PostInput({ onPostCreated }: PostInputProps) {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    setSelectedFile(file);
+    fileUpload(file).then((url) => {
+      setFileUrl(url);
+      console.log("File_uploaded_to_URL:", url);
+    });
 
     // Create preview
     const reader = new FileReader();
